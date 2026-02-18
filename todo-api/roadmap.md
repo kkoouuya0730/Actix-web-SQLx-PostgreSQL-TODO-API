@@ -189,6 +189,7 @@ sqlx migrate run
 - `query_as!` マクロ
 - structとDBのマッピング
 - JSONレスポンス化
+- handlerとrepositoryに分割
 
 到達目標：
 

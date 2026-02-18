@@ -1,19 +1,16 @@
+mod handlers;
+mod models;
+mod repository;
+
+use crate::repository::todo_repository::{PgTodoRepository, TodoRepository};
 use actix_web::{App, HttpResponse, HttpServer, Responder, get, web};
 use dotenvy::dotenv;
 use sqlx::PgPool;
 use std::env;
+use std::sync::Arc;
 
 struct AppState {
-    pool: PgPool,
-}
-
-async fn health_check(data: web::Data<AppState>) -> impl Responder {
-    let row: (i32,) = sqlx::query_as("SELECT 1")
-        .fetch_one(&data.pool)
-        .await
-        .unwrap();
-
-    HttpResponse::Ok().body(format!("DB OK: {}", row.0))
+    repo: Arc<dyn TodoRepository>,
 }
 
 #[get("/")]
@@ -33,10 +30,14 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to create pool");
     println!("Connected to DB");
 
+    let repo = PgTodoRepository::new(pool);
+
     HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(AppState { pool: pool.clone() }))
-            .route("/health", web::get().to(health_check))
+            .app_data(web::Data::new(AppState {
+                repo: Arc::new(repo.clone()),
+            }))
+            .route("/todos", web::get().to(handlers::todos::get_todos))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
