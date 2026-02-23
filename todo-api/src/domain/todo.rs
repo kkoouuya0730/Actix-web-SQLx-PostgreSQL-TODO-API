@@ -1,3 +1,7 @@
+// ドメイン層
+// ビジネスの中心モデル
+// DBやHTTPに依存しない
+
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 

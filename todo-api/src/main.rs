@@ -1,45 +1,47 @@
-mod handlers;
-mod models;
-mod repository;
-
-use crate::repository::todo_repository::{PgTodoRepository, TodoRepository};
-use actix_web::{App, HttpResponse, HttpServer, Responder, get, web};
-use dotenvy::dotenv;
-use sqlx::PgPool;
-use std::env;
+use std::net::SocketAddr;
 use std::sync::Arc;
 
-struct AppState {
-    repo: Arc<dyn TodoRepository>,
-}
+use axum::{Router, routing::get};
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello")
-}
+use dotenvy::dotenv;
+use tokio::net::TcpListener;
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    println!("Server running at http://127.0.0.1:8080");
+use std::env;
 
+mod db;
+mod domain;
+mod handlers;
+mod repository;
+mod service;
+
+use handlers::todos::list_todo;
+use repository::todo_repository::TodoRepository;
+use repository::todo_repository_impl::TodoRepositoryImpl;
+use service::todo_service::TodoService;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    // .env読み込み
     dotenv().ok();
-
+    // 環境変数読み込み
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let pool = PgPool::connect(&database_url)
-        .await
-        .expect("Failed to create pool");
+    // DB接続
+    let pool = db::new_pool(&database_url).await;
     println!("Connected to DB");
+    // Repository生成
+    let repo: Arc<dyn TodoRepository> = Arc::new(TodoRepositoryImpl::new(pool));
+    // Service生成
+    let service = Arc::new(TodoService::new(repo));
+    // Router構築
+    let app = Router::new()
+        .route("/todos", get(list_todo))
+        .with_state(service);
 
-    let repo = PgTodoRepository::new(pool);
+    let addr = SocketAddr::from(([127, 0, 0, 1], 8081));
+    println!("🚀 Server running at http://{}", addr);
 
-    HttpServer::new(move || {
-        App::new()
-            .app_data(web::Data::new(AppState {
-                repo: Arc::new(repo.clone()),
-            }))
-            .route("/todos", web::get().to(handlers::todos::get_todos))
-    })
-    .bind(("127.0.0.1", 8080))?
-    .run()
-    .await
+    let listener = TcpListener::bind(addr).await?;
+    axum::serve(listener, app).await?;
+
+    Ok(())
 }

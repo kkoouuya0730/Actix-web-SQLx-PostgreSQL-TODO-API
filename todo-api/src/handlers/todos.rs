@@ -1,14 +1,14 @@
-use crate::AppState;
-use actix_web::{HttpResponse, Responder, web};
+// Handler層(HTTP)
+// リクエスト受付
+// レスポンス返却
+use axum::{Json, extract::State};
+use std::sync::Arc;
 
-pub async fn get_todos(data: web::Data<AppState>) -> impl Responder {
-    let result = data.repo.find_all().await;
+use crate::service::todo_service::TodoService;
 
-    match result {
-        Ok(todos) => HttpResponse::Ok().json(todos),
-        Err(e) => {
-            eprintln!("DB error: {:?}", e);
-            HttpResponse::InternalServerError().finish()
-        }
-    }
+pub async fn list_todo(
+    State(service): State<Arc<TodoService>>,
+) -> Json<Vec<crate::domain::todo::Todo>> {
+    let todos = service.get_all().await.unwrap();
+    Json(todos)
 }
