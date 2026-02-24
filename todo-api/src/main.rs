@@ -14,6 +14,7 @@ mod handlers;
 mod repository;
 mod service;
 
+use handlers::todos::get_todo;
 use handlers::todos::list_todo;
 use repository::todo_repository::TodoRepository;
 use repository::todo_repository_impl::TodoRepositoryImpl;
@@ -35,6 +36,7 @@ async fn main() -> anyhow::Result<()> {
     // Router構築
     let app = Router::new()
         .route("/todos", get(list_todo))
+        .route("/todos/:id", get(get_todo))
         .with_state(service);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8081));

@@ -32,4 +32,18 @@ impl TodoRepository for TodoRepositoryImpl {
 
         Ok(todos)
     }
+
+    async fn find_by_id(&self, id: i32) -> Result<Option<Todo>, sqlx::Error> {
+        sqlx::query_as!(
+            Todo,
+            r#"
+            SELECT id, title, completed, created_at
+            FROM todos
+            WHERE id = $1
+            "#,
+            id
+        )
+        .fetch_optional(&self.pool)
+        .await
+    }
 }

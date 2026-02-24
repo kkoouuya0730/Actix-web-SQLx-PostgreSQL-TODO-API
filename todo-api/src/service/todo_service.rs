@@ -15,4 +15,8 @@ impl TodoService {
     pub async fn get_all(&self) -> Result<Vec<Todo>, sqlx::Error> {
         self.repo.find_all().await
     }
+
+    pub async fn get_by_id(&self, id: i32) -> Result<Option<Todo>, sqlx::Error> {
+        self.repo.find_by_id(id).await
+    }
 }
