@@ -19,4 +19,12 @@ impl TodoService {
     pub async fn get_by_id(&self, id: i32) -> Result<Option<Todo>, sqlx::Error> {
         self.repo.find_by_id(id).await
     }
+
+    pub async fn create(&self, title: String) -> Result<Todo, anyhow::Error> {
+        if title.trim().is_empty() {
+            anyhow::bail!("title must not be empty");
+        }
+
+        self.repo.create(title).await
+    }
 }

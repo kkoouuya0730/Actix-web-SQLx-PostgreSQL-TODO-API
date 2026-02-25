@@ -46,4 +46,20 @@ impl TodoRepository for TodoRepositoryImpl {
         .fetch_optional(&self.pool)
         .await
     }
+
+    async fn create(&self, title: String) -> Result<Todo, anyhow::Error> {
+        let todo = sqlx::query_as!(
+            Todo,
+            r#"
+            INSERT INTO todos (title, completed)
+            VALUES ($1, false)
+            RETURNING id, title, completed, created_at
+            "#,
+            title
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(todo)
+    }
 }

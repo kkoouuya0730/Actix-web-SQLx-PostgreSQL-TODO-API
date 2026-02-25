@@ -12,3 +12,8 @@ pub struct Todo {
     pub completed: bool,
     pub created_at: NaiveDateTime,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateTodoRequest {
+    pub title: String,
+}
