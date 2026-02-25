@@ -27,4 +27,12 @@ impl TodoService {
 
         self.repo.create(title).await
     }
+
+    pub async fn update_completed(
+        &self,
+        id: i32,
+        completed: bool,
+    ) -> Result<Option<Todo>, anyhow::Error> {
+        self.repo.update_completed(id, completed).await
+    }
 }

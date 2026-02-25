@@ -9,4 +9,9 @@ pub trait TodoRepository: Send + Sync {
     async fn find_all(&self) -> Result<Vec<Todo>, sqlx::Error>;
     async fn find_by_id(&self, id: i32) -> Result<Option<Todo>, sqlx::Error>;
     async fn create(&self, title: String) -> Result<Todo, anyhow::Error>;
+    async fn update_completed(
+        &self,
+        id: i32,
+        completed: bool,
+    ) -> Result<Option<Todo>, anyhow::Error>;
 }

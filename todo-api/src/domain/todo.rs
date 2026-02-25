@@ -17,3 +17,8 @@ pub struct Todo {
 pub struct CreateTodoRequest {
     pub title: String,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateTodoRequest {
+    pub completed: bool,
+}

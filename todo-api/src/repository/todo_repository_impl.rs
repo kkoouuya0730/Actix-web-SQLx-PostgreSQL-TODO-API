@@ -62,4 +62,26 @@ impl TodoRepository for TodoRepositoryImpl {
 
         Ok(todo)
     }
+
+    async fn update_completed(
+        &self,
+        id: i32,
+        completed: bool,
+    ) -> Result<Option<Todo>, anyhow::Error> {
+        let todo = sqlx::query_as!(
+            Todo,
+            r#"
+            UPDATE todos
+            SET completed = $1
+            WHERE id = $2
+            RETURNING id, title, completed, created_at
+            "#,
+            completed,
+            id
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(todo)
+    }
 }
