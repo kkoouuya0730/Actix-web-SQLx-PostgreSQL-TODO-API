@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use axum::{Router, routing::get, routing::patch, routing::post};
+use axum::{Router, routing::delete, routing::get, routing::patch, routing::post};
 
 use dotenvy::dotenv;
 use tokio::net::TcpListener;
@@ -14,7 +14,7 @@ mod handlers;
 mod repository;
 mod service;
 
-use handlers::todos::{create_todo, get_todo, list_todo, update_todo_completed};
+use handlers::todos::{create_todo, delete_todo, get_todo, list_todo, update_todo_completed};
 use repository::todo_repository::TodoRepository;
 use repository::todo_repository_impl::TodoRepositoryImpl;
 use service::todo_service::TodoService;
@@ -38,6 +38,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/todos/:id", get(get_todo))
         .route("/todos", post(create_todo))
         .route("/todos/:id", patch(update_todo_completed))
+        .route("/todos/:id", delete(delete_todo))
         .with_state(service);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8081));

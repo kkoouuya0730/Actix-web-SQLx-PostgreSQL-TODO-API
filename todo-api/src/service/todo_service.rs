@@ -35,4 +35,8 @@ impl TodoService {
     ) -> Result<Option<Todo>, anyhow::Error> {
         self.repo.update_completed(id, completed).await
     }
+
+    pub async fn delete(&self, id: i32) -> Result<bool, anyhow::Error> {
+        self.repo.delete(id).await
+    }
 }

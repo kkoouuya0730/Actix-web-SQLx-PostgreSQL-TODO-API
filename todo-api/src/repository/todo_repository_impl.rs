@@ -22,8 +22,9 @@ impl TodoRepository for TodoRepositoryImpl {
         let todos = sqlx::query_as!(
             Todo,
             r#"
-            SELECT id, title, completed, created_at
+            SELECT id, title, completed, created_at, deleted_at
             FROM todos
+            WHERE deleted_at IS NULL
             ORDER BY created_at DESC
             "#
         )
@@ -37,9 +38,10 @@ impl TodoRepository for TodoRepositoryImpl {
         sqlx::query_as!(
             Todo,
             r#"
-            SELECT id, title, completed, created_at
+            SELECT id, title, completed, created_at, deleted_at
             FROM todos
             WHERE id = $1
+            AND deleted_at IS NULL;
             "#,
             id
         )
@@ -53,7 +55,7 @@ impl TodoRepository for TodoRepositoryImpl {
             r#"
             INSERT INTO todos (title, completed)
             VALUES ($1, false)
-            RETURNING id, title, completed, created_at
+            RETURNING id, title, completed, created_at, deleted_at
             "#,
             title
         )
@@ -74,7 +76,7 @@ impl TodoRepository for TodoRepositoryImpl {
             UPDATE todos
             SET completed = $1
             WHERE id = $2
-            RETURNING id, title, completed, created_at
+            RETURNING id, title, completed, created_at, deleted_at
             "#,
             completed,
             id
@@ -83,5 +85,21 @@ impl TodoRepository for TodoRepositoryImpl {
         .await?;
 
         Ok(todo)
+    }
+
+    async fn delete(&self, id: i32) -> Result<bool, anyhow::Error> {
+        let result = sqlx::query!(
+            r#"
+            UPDATE todos
+            SET deleted_at = NOW()
+            WHERE id = $1
+            AND deleted_at IS NULL
+            "#,
+            id
+        )
+        .execute(&self.pool)
+        .await?;
+
+        Ok(result.rows_affected() > 0)
     }
 }

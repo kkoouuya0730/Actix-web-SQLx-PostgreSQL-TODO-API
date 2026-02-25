@@ -52,3 +52,19 @@ pub async fn update_todo_completed(
         None => Err(StatusCode::NOT_FOUND),
     }
 }
+
+pub async fn delete_todo(
+    Path(id): Path<i32>,
+    State(service): State<Arc<TodoService>>,
+) -> Result<StatusCode, StatusCode> {
+    let deleted = service
+        .delete(id)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    if deleted {
+        Ok(StatusCode::NO_CONTENT)
+    } else {
+        Err(StatusCode::NOT_FOUND)
+    }
+}

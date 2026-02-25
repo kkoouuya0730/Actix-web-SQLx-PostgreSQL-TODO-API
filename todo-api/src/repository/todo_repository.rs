@@ -14,4 +14,5 @@ pub trait TodoRepository: Send + Sync {
         id: i32,
         completed: bool,
     ) -> Result<Option<Todo>, anyhow::Error>;
+    async fn delete(&self, id: i32) -> Result<bool, anyhow::Error>;
 }
